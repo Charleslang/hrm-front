@@ -1,0 +1,70 @@
+@import './normalize.css';
+
+/*:root -> 获取根元素html*/
+:root {
+  /* 定义变量, 使用 var 来使用变量 */
+  --color-text: #3D4450;;
+  --color-bacground-color: rgba(0,180,165,0.1);
+  --color-text-highlint: #00B4A5;
+  --color-tint: #ff8198;
+  --color-background: #fff;
+  --font-size: 14px;
+  --line-height: 1.5;
+}
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  user-select: none; /* 禁止用户鼠标在页面上选中文字/图片等 */
+  -webkit-tap-highlight-color: transparent; /* webkit是苹果浏览器引擎，tap点击，highlight背景高亮，color颜色，颜色用数值调节 */
+  /* background: var(--color-background);
+  color: var(--color-text); */
+  /* rem vw/vh */
+  width: 100vw;
+  overflow-x: hidden;
+}
+
+body::-webkit-scrollbar {/*滚动条整体样式*/
+  width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+  height: 1px;
+}
+
+body::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
+  border-radius: 10px;
+  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  background: rgba(5, 202, 186, 0.781);
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+}
+
+body::-webkit-scrollbar-track {/*滚动条里面轨道*/
+  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  background: #EEE;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+}
+
+a {
+  /* color: var(--color-text); */
+  text-decoration: none;
+}
+
+
+.clear-fix::after {
+  clear: both;
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  visibility: hidden;
+}
+
+.clear-fix {
+  zoom: 1;
+}
