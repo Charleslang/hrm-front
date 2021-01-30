@@ -1,4 +1,5 @@
 @import './normalize.css';
+@import './element-ui.css';
 
 /*:root -> 获取根元素html*/
 :root {
@@ -32,22 +33,22 @@ body {
 }
 
 body::-webkit-scrollbar {/*滚动条整体样式*/
-  width: 10px;     /*高宽分别对应横竖滚动条的尺寸*/
+  width: 9px;     /*高宽分别对应横竖滚动条的尺寸*/
   height: 1px;
 }
 
 body::-webkit-scrollbar-thumb {/*滚动条里面小方块*/
   border-radius: 10px;
-  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-  background: rgba(5, 202, 186, 0.781);
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  -webkit-box-shadow: inset 0 0 5px rgba(144,147,153,.3);
+  background: rgba(144,147,153,.3);
+  box-shadow: inset 0 0 5px rgba(144,147,153,.3);
 }
 
 body::-webkit-scrollbar-track {/*滚动条里面轨道*/
-  -webkit-box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  -webkit-box-shadow: inset 0 0 5px rgba(144,147,153,.3);
   border-radius: 10px;
-  background: #EEE;
-  box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
+  background: #fff;
+  box-shadow: inset 0 0 5px rgba(144,147,153,.3);
 }
 
 a {
