@@ -36,7 +36,7 @@
   import HeaderNav from './components/HeaderNav'
   import LoginMain from './components/LoginMain'
   import LoginFooter from './components/LoginFooter'
-  import {login} from 'api/login'
+  // import {login} from 'api/login'
 
   export default {
     components: {

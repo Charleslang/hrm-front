@@ -17,7 +17,7 @@
     </el-aside>
     <el-container>
       <el-header class="header-nav">
-        <header-nav @toggleMenuCollapse="toggleMenuCollapse"></header-nav>
+        <header-nav @toggleMenuCollapse="toggleMenuCollapse" @logout="logout"></header-nav>
       </el-header>
       <el-main class="app-main-wrapper">
         <app-main/>
@@ -30,6 +30,8 @@
   import AppMain from './AppMain'
   import SideMenu from './SideMenu'
   import HeaderNav from './HeaderNav'
+
+  import {logout} from 'api/login'
 
   export default {
     components: {
@@ -60,6 +62,16 @@
     methods: {
       toggleMenuCollapse(menuCollapse) {
         this.menuCollapse = menuCollapse
+      },
+      logout() {
+        console.log('退出成功')
+        // logout().then(res => {
+        //   console.log('退出成功')
+        //   this.$store.commit('logout')
+        //   this.$store.push('/')
+        // }, err => {
+        //   console.log('退出失败')
+        // })
       }
     }
   }

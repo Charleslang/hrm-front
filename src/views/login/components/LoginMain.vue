@@ -3,34 +3,39 @@
     <el-tabs value="pwd">
       <el-tab-pane label="密码登录" name="pwd">
         <div class="form-wrapper">
-          <el-form  status-icon ref="ruleForm" label-width="0" class="login-form">
-            <el-form-item prop="pass">
-              <el-input autocomplete="off" placeholder="登录名/手机号/邮箱"></el-input>
+          <el-form :model="pwdForm" :rules="pwdRules" status-icon ref="pwdForm" label-width="0" class="pwd-form">
+            <el-form-item prop="account">
+              <el-input v-model="pwdForm.account" autocomplete="off" placeholder="登录名/手机号/邮箱"></el-input>
             </el-form-item>
-            <el-form-item prop="checkPass">
-              <el-input type="password"  autocomplete="off" placeholder="密码" show-password></el-input>
+            <el-form-item prop="password">
+              <el-input type="password" v-model="pwdForm.password" autocomplete="off" placeholder="密码" show-password></el-input>
             </el-form-item>
             <el-form-item>
-              <el-button class="submit-btn" type="primary" @click="toBackend">登&nbsp;录</el-button>
+              <el-button class="submit-btn" type="primary" @click="loginWithPwd" :loading="loading">登&nbsp;录</el-button>
             </el-form-item>
           </el-form>
         </div>
       </el-tab-pane>
       <el-tab-pane label="验证码登录" name="code">
         <div class="form-wrapper">
-          <el-form  status-icon ref="ruleForm" label-width="0" class="login-form">
-            <el-form-item prop="pass">
-              <el-input autocomplete="off" placeholder="手机号/邮箱"></el-input>
+          <el-form :model="codeForm" :rules="codeRules" status-icon ref="codeForm" label-width="0" class="login-form">
+            <el-form-item prop="account">
+              <el-input v-model="codeForm.account" autocomplete="off" placeholder="手机号/邮箱" :disabled="codeBtnDisabled"></el-input>
             </el-form-item>
-            <el-form-item prop="checkPass">
-              <el-input autocomplete="off" placeholder="请输入验证码" maxlength="6">
+            <el-form-item prop="code">
+              <el-input v-model.number="codeForm.code" autocomplete="off" placeholder="请输入验证码" maxlength="6">
                 <template v-slot:suffix>
-                  <el-button type="text">获取验证码</el-button>
+                  <el-button type="text" @click="sendCode" :disabled="codeBtnDisabled" 
+                    :class="{'btn-disabled' : codeBtnDisabled}" :loading="codeBtnLoading">
+                    {{ showCodeBtnMsg }}
+                  </el-button>
                 </template>
               </el-input>
             </el-form-item>
             <el-form-item>
-              <el-button class="submit-btn" type="primary">登&nbsp;录</el-button>
+              <el-button class="submit-btn" type="primary" :loading="loading" @click="loginWithCode">
+                登&nbsp;录
+              </el-button>
             </el-form-item>
           </el-form>
         </div>
@@ -45,7 +50,74 @@
 </template>
 
 <script>
+  import {isBlank, validatePhone, validateEmail, validateNumber} from 'utils/validate'
+
+  import {loginWithPwd, loginWithCode} from 'api/login'
+  import {sendCode} from 'api/code'
+
+  import {Message} from 'element-ui'
+
   export default {
+    data() {
+      const validateAccount = (rule, value, callback) => {
+        if(isBlank(value)) {
+          return callback(new Error('请输入账号'))
+        }
+        callback()
+      }
+      const validatePassword = (rule, value, callback) => {
+        if(!value) {
+          return callback(new Error('请输入密码'))
+        }
+        callback()
+      }
+      const validateCodeAccount = (rule, value, callback) => {
+        if (!validatePhone(value) && !validateEmail(value)) {
+          return callback(new Error('手机号或邮箱格式不正确'))
+        }
+        callback()
+      }
+      return {
+        pwdForm: {
+          account: '',
+          password: ''
+        },
+        pwdRules: {
+          account: [
+            {validator: validateAccount, trigger: 'blur'}
+          ],
+          password: [
+            {validator: validatePassword, trigger: 'blur'}
+          ]
+        },
+        codeForm: {
+          account: '',
+          code: ''
+        },
+        codeRules: {
+          account: [
+            {validator: validateCodeAccount, trigger: 'blur'}
+          ]
+        },
+        loading: false,
+        timer: null,
+        second: 59,
+        codeBtnLoading: false
+      }
+    },
+    computed: {
+      showCodeBtnMsg() {
+        let msg = '获取验证码'
+        if(this.timer != null) {
+          msg = '重新发送(' + this.second + 's)'
+        }
+        return msg
+      },
+      codeBtnDisabled() {
+        return this.timer != null
+      }
+
+    },
     methods: {
       toReset() {
         this.$router.push('/portal/reset')
@@ -55,6 +127,73 @@
       },
       toBackend() {
         this.$router.push('/backend')
+      },
+      sendCode() {
+        this.$refs.codeForm.validate(valid => {
+          if (valid) {
+            this.codeBtnLoading = true
+            sendCode(this.codeForm.account).then(res => {
+              console.log(res)
+              this.codeBtnLoading = false
+              Message({
+                message: '验证码已发送',
+                type: 'success'
+              })
+              this.timer = setInterval(() => {
+                if (this.second <= 1) {
+                  clearInterval(this.timer)
+                  this.timer = null
+                  this.second = 59
+                }
+                this.second--
+              }, 1000);
+            }, err => {
+              this.codeBtnLoading = false
+              console.log('loginMain : ' + err)
+            })
+          } else {
+            return false
+          }
+        })
+      },
+      loginWithPwd() {
+        this.$refs.pwdForm.validate((valid) => {
+          if(valid) {
+            this.loading = true
+            loginWithPwd(this.pwdForm).then(res => {
+              this.$store.commit('setToken', res.data.accessToken)
+              this.loading = false
+              this.$router.push('/backend')
+            }, err => {
+              this.loading = false
+            })
+          } else {
+            return false
+          }
+        })
+      },
+      loginWithCode() {
+        this.$refs.codeForm.validate(valid => {
+          if(valid) {
+            if(this.timer === null || this.second <= 1) {
+              Message({
+                type: 'error',
+                message: '验证码错误或已失效, 请重新发送'
+              })
+              return
+            }
+            this.loading = true
+            loginWithCode(this.codeForm).then(res => {
+              this.$store.commit('setToken', res.data.accessToken)
+              this.loading = false
+              this.$router.push('/backend')
+            }, err => {
+              this.loading = false
+            })
+          } else {
+            return false
+          }
+        })
       }
     }
   }
@@ -87,5 +226,8 @@
   #login-main .bottom .reset-div:hover, 
   #login-main .bottom .register-div:hover {
     color: #409EFF;
+  }
+  .btn-disabled {
+    color: #c0c4cc
   }
 </style>

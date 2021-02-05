@@ -13,8 +13,8 @@
           <i class="el-icon-caret-bottom"></i>
         </span>
         <el-dropdown-menu slot="dropdown">
-          <el-dropdown-item command="a">个人中心</el-dropdown-item>
-          <el-dropdown-item command="b">退出</el-dropdown-item>
+          <el-dropdown-item command="profile">个人中心</el-dropdown-item>
+          <el-dropdown-item command="logout" @click.native.prevent="logout">退出</el-dropdown-item>
         </el-dropdown-menu>
         </el-dropdown>
     </div>
@@ -22,6 +22,8 @@
 </template>
 
 <script>
+  
+
   export default {
     data() {
       return {
@@ -32,6 +34,14 @@
       toggleMenuCollapse() {
         this.menuCollapse = !this.menuCollapse
         this.$emit('toggleMenuCollapse', this.menuCollapse)
+      },
+      async logout() {
+        // this.$emit('logout')
+        await this.$store.dispatch('logout')
+        this.$router.push('/')
+      },
+      handleCommand(command) {
+        console.log(command)
       }
     }
     

@@ -1,5 +1,6 @@
 import Axios from 'axios'
 import { Loading, Message } from 'element-ui'
+import store from '@/store'
 
 let loading
 
@@ -14,15 +15,15 @@ function closeLoading() {
   loading.close()
 }
 
-export function request(config) {
+function request(config) {
   const axios = Axios.create({
     baseURL: 'http://localhost:8888',
     timeout: 5000
   })
 
   // 拦截请求
-  axios.interceptors.request.use(success => {
-    startLoading()
+  axios.interceptors.request.use(req => {
+    // startLoading()
     // 其实该参数就是我们传递的 config
     // console.log(success)
     // 可以在这里修改我们之前传入的信息
@@ -30,33 +31,53 @@ export function request(config) {
     // 也可以在发送请求时添加动画
 
     // 验证用户的 token，是否已登录
-
+    if (store.getters.token) {
+      req.headers['accessToken'] = store.getters.token
+    }
+    console.log("请求token : " + store.getters.token)
     // 放行
-    return success
+    return req
   }, err => {
     // console.log(err)
     Message({
-      message: '请求失败',
+      message: err.message || '请求失败',
       type: 'error',
       showClose: true
     })
+    return Promise.reject(err)
   })
 
   // 拦截响应
-  axios.interceptors.response.use(result => {
-    closeLoading()
-    console.log("loading...", loading)
+  axios.interceptors.response.use(response => {
+    // closeLoading()
     // console.log(result)
 
     // 返回结果，只返回我们需要的数据
-    return result.data
+    const data = response.data
+    console.log('request响应:')
+    console.log(data)
+    console.log('-----------------')
+
+    if (data.code === 200) {
+      return data
+    } else {
+      Message({
+        type: 'error',
+        message: data.message || '客户端好像出错了'
+      })
+      // 再判断是否需要重新登录
+
+      return Promise.reject(data.message || '客户端好像出错了')
+    }
+    
   }, error => {
-    // console.log(error)
+    console.error(error)
     Message({
-      message: '响应错误',
+      message: error.message || '响应错误',
       type: 'error',
       showClose: true
     })
+    return Promise.reject(error)
   })
   
   // axios 返回的就是 promise
