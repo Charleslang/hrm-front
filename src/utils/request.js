@@ -1,6 +1,7 @@
 import Axios from 'axios'
 import { Loading, Message } from 'element-ui'
 import store from '@/store'
+import {accessToken, headerToken} from '@/settings'
 
 let loading
 
@@ -32,7 +33,7 @@ function request(config) {
 
     // 验证用户的 token，是否已登录
     if (store.getters.token) {
-      req.headers['accessToken'] = store.getters.token
+      req.headers[accessToken] = store.getters.token
     }
     console.log("请求token : " + store.getters.token)
     // 放行
@@ -48,9 +49,16 @@ function request(config) {
   })
 
   // 拦截响应
-  axios.interceptors.response.use(response => {
+  axios.interceptors.response.use(async response => {
     // closeLoading()
     // console.log(result)
+    
+    const refreshToken = response.headers[headerToken]
+    console.log('响应token：', response)
+    if (refreshToken) {
+      console.log('刷新了token')
+      await store.dispatch('refreshToken', refreshToken)
+    }
 
     // 返回结果，只返回我们需要的数据
     const data = response.data

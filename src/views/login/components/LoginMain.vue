@@ -5,7 +5,7 @@
         <div class="form-wrapper">
           <el-form :model="pwdForm" :rules="pwdRules" status-icon ref="pwdForm" label-width="0" class="pwd-form">
             <el-form-item prop="account">
-              <el-input v-model="pwdForm.account" autocomplete="off" placeholder="登录名/手机号/邮箱"></el-input>
+              <el-input v-model.trim="pwdForm.account" autocomplete="off" placeholder="登录名/手机号/邮箱"></el-input>
             </el-form-item>
             <el-form-item prop="password">
               <el-input type="password" v-model="pwdForm.password" autocomplete="off" placeholder="密码" show-password></el-input>
@@ -20,10 +20,11 @@
         <div class="form-wrapper">
           <el-form :model="codeForm" :rules="codeRules" status-icon ref="codeForm" label-width="0" class="login-form">
             <el-form-item prop="account">
-              <el-input v-model="codeForm.account" autocomplete="off" placeholder="手机号/邮箱" :disabled="codeBtnDisabled"></el-input>
+              <el-input v-model.trim="codeForm.account" autocomplete="off" placeholder="手机号/邮箱" :disabled="codeBtnDisabled"></el-input>
             </el-form-item>
             <el-form-item prop="code">
-              <el-input v-model.number="codeForm.code" autocomplete="off" placeholder="请输入验证码" maxlength="6">
+              <el-input v-model.number="codeForm.code" autocomplete="off" placeholder="请输入验证码" 
+                oninput ="value=value.replace(/[^0-9]/g,'')" maxlength="6">
                 <template v-slot:suffix>
                   <el-button type="text" @click="sendCode" :disabled="codeBtnDisabled" 
                     :class="{'btn-disabled' : codeBtnDisabled}" :loading="codeBtnLoading">
@@ -146,7 +147,7 @@
                   this.second = 59
                 }
                 this.second--
-              }, 1000);
+              }, 1000)
             }, err => {
               this.codeBtnLoading = false
               console.log('loginMain : ' + err)
