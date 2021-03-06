@@ -115,6 +115,7 @@ export function doPost(config) {
  */
 export function doPut(config) {
   config['method'] = 'put'
+  console.log('put...')
   return request(config)
 }
 

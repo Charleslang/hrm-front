@@ -49,3 +49,11 @@
 .el-switch .el-switch__label {
    margin: 0;
 }
+
+.el-switch.is-disabled {
+  opacity: 1;
+ }
+ .el-switch.is-disabled .el-switch__core, .el-switch.is-disabled .el-switch__label {
+   cursor: pointer !important;
+ }
+ 

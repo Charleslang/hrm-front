@@ -2,7 +2,12 @@
   <div id="unit-wrapper">
     <div>
       <el-button icon="el-icon-plus" type="primary" size="small" @click="addUnit">添加</el-button>
-      <el-button icon="el-icon-delete" type="danger" size="small" :disabled="selectRow.length <= 0">批量删除</el-button>
+      <el-button
+        icon="el-icon-delete" type="danger" size="small" 
+        :disabled="selectRow.length <= 0"
+        @click="deleteUnitBatchByIds(selectRow)">
+        批量删除
+      </el-button>
     </div>
     <div class="content-wrapper">
       <el-table
@@ -21,37 +26,38 @@
           :index="computeIndex">
         </el-table-column>
         <el-table-column
-          prop="name"
+          prop="unit.name"
           label="名称"
           :show-overflow-tooltip="true">
         </el-table-column>
         <el-table-column
-          prop="shortName"
+          prop="unit.shortName"
           label="简称">
         </el-table-column>
         <el-table-column
-          prop="userAdminVO.name"
+          prop="user.name"
           label="负责人"
           :formatter="formatUnitHeader">
         </el-table-column>
         <el-table-column
-          prop="createTime"
+          prop="unit.createTime"
           label="创建时间">
         </el-table-column>
         <el-table-column
-          prop="modifyTime"
+          prop="unit.modifyTime"
           label="更新时间">
         </el-table-column>
         <el-table-column label="状态" width="80">
           <template slot-scope="scope">
             <el-switch
               :width="50"
-              v-model="scope.row.enable"
+              v-model="scope.row.unit.enable"
               active-color="#13ce66"
               inactive-color="#DCDFE6"
               active-text="启用"
               inactive-text="停用"
-              @change="changeStatus">
+              :disabled="true"
+              @click.native.prevent="changeStatus(scope.row.unit)">
             </el-switch>
           </template>
         </el-table-column>
@@ -64,7 +70,7 @@
             <el-button
               size="mini"
               type="danger"
-              @click="deleteUnit(scope.$index, scope.row)">删除</el-button>
+              @click="deleteUnit(scope.$index, scope.row.unit)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -84,7 +90,7 @@
       </el-pagination>
     </div>
     <div v-if="dialogFormVisible">
-      <el-dialog title="收货地址" :visible.sync="dialogFormVisible" top="8vh" width="50%"
+      <el-dialog :title="dialogTitle" :visible.sync="dialogFormVisible" top="8vh" width="50%"
         destroy-on-close
         @opened="openDialog" 
         @close="closeDialog">
@@ -103,12 +109,13 @@
 </template>
 
 <script>
-  import {getAllUnit} from 'api/unit'
+  import {getAllUnit, deleteUnitById, deleteUnitByIds, updateUnitStatus} from 'api/unit'
+  import {updateUnitAndUser, addUnitAndUser} from 'api/app'
+
   import {Page} from '@/obj/Page'
+  import {UnitBO} from '@/obj/AppBO'
 
   import EditUnit from './components/EditUnit'
-
-  import {updateUnitAndUser} from 'api/app'
 
   import {messageDuration} from '@/settings'
 
@@ -129,7 +136,9 @@
       }
     },
     computed: {
-      
+      dialogTitle() {
+        return Object.keys(this.unitInfo).length > 0 ? '编辑单位' : '添加单位'
+      }
     },
     mounted() {
       this.initUnit(this.pageInfo.page, this.pageInfo.size)
@@ -164,8 +173,8 @@
       editUnit(index, data) {
         console.log(index + '' , data)
         this.dialogFormVisible = true
-        Object.assign(this.unitInfo, data)
-        Object.assign(this.adminInfo, data.userAdminVO)
+        Object.assign(this.unitInfo, data.unit)
+        Object.assign(this.adminInfo, data.user)
         this.$nextTick(() => {
 
           console.log(this.$refs.edit.$refs.form)
@@ -173,6 +182,41 @@
       },
       deleteUnit(index, data) {
         console.log(index + '' , data)
+        this.$confirm('此操作将永久删除该记录,不可恢复,是否继续?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'error'
+        }).then(() => {
+          deleteUnitById(data.id).then(res => {
+            this.initUnit(this.pageInfo.page, this.pageInfo.size)
+            this.$message({
+              type: 'success',
+              message: '删除成功!'
+            })
+          }, err => {
+            console.log(err)
+          })
+        }).catch(() => {         
+        })
+      },
+      deleteUnitBatchByIds(selectRow) {
+        this.$confirm('确定删除所选记录, 删除后不可恢复?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'error'
+        }).then(() => {
+          let ids = selectRow.map(e => e.unit.id)
+          deleteUnitByIds(ids).then(res => {
+            this.initUnit(this.pageInfo.page, this.pageInfo.size)
+            this.$message({
+              type: 'success',
+              message: '批量删除成功!'
+            })
+          }, err => {
+            console.log(err)
+          })
+        }).catch(() => {         
+        })
       },
       saveOrUpdate() {
         // this.$nextTick(() => {
@@ -198,26 +242,63 @@
               })
             })
           ]).then(res => {
-            console.log('都通过了')
-            delete this.adminInfo.password2
-            updateUnitAndUser(this.unitInfo, this.adminInfo).then(res => {
-              this.dialogFormVisible = false
-              this.initUnit()
-              this.$message({
-                type: 'success',
-                message: '更新成功',
-                duration: messageDuration
+            if (this.dialogTitle === '编辑单位') {
+              console.log('都通过了')
+              delete this.adminInfo.password2
+              let unitBO = new UnitBO(this.$refs.edit.$refs.unitForm.model, this.$refs.edit.$refs.userForm.model)
+              updateUnitAndUser(unitBO).then(res => {
+                this.dialogFormVisible = false
+                this.initUnit(this.pageInfo.page, this.pageInfo.size)
+                this.$message({
+                  type: 'success',
+                  message: '更新成功',
+                  duration: messageDuration
+                })
+              }, err => {
+                console.error(err)
               })
-            }, err => {
-              console.error(err)
-            })
+            } else {
+              delete this.adminInfo.password2
+              let unitBO = new UnitBO(this.$refs.edit.$refs.unitForm.model, this.$refs.edit.$refs.userForm.model)
+              addUnitAndUser(unitBO).then(res => {
+                this.dialogFormVisible = false
+                this.initUnit(this.pageInfo.page, this.pageInfo.size)
+                this.$message({
+                  type: 'success',
+                  message: '添加成功',
+                  duration: messageDuration
+                })
+              }, err => {
+                console.log(err)
+              })
+            }
+            
             // this.dialogFormVisible = false
           })
           
         // })
       },
-      changeStatus(value) {
-        console.log(value)
+      changeStatus(unit) {
+        console.log(unit)
+        let msg = !unit.enable ? '启用' : '停用'
+        this.$confirm('是否' + msg + '该单位?', '提示', {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning'
+        }).then(() => {
+          console.log('hh')
+          updateUnitStatus(unit.id, !unit.enable).then(res => {
+            this.initUnit(this.pageInfo.page, this.pageInfo.size)
+            this.$message({
+              type: 'success',
+              message: '已' + msg,
+              duration: messageDuration
+            })
+          }, err => {
+            console.log(err)
+          })
+        }).catch(() => {         
+        })
       },
       changeSelection(value) {
         // Object.assign(this.selectRow, value)

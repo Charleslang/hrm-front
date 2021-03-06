@@ -14,18 +14,26 @@ export function regist({companyName, telephone, code, password}) {
 
 }
 
-export function updateUnitAndUser(unit, user) {
-  user.password = str2base64(user.password)
-  console.log(unit)
-  console.log(user)
+export function updateUnitAndUser(unitBO) {
+  unitBO.user.password = str2base64(unitBO.user.password)
+  console.log(unitBO)
   return doPut({
     url: '/business/unitanduser',
     headers: {
-      'Content-type': 'application/json;charset=UTF-8'
+      'Content-type': 'application/json;charset=UTF-8' // 由于后台使用的是 @RequestBody, 所以，这里需要使用 JSON
     },
-    data: qs.stringify({
-      unit,
-      user
-    })
+    data: JSON.stringify(unitBO) // 由于后台使用的是 @RequestBody, 所以，这里需要使用 JSON
+  })
+}
+
+export function addUnitAndUser(unitBO) {
+  unitBO.user.password = str2base64(unitBO.user.password)
+  console.log(unitBO)
+  return doPost({
+    url: '/business/unitanduser',
+    headers: {
+      'Content-type': 'application/json;charset=UTF-8' // 由于后台使用的是 @RequestBody, 所以，这里需要使用 JSON
+    },
+    data: JSON.stringify(unitBO) // 由于后台使用的是 @RequestBody, 所以，这里需要使用 JSON
   })
 }
