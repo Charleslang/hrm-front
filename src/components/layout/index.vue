@@ -33,6 +33,8 @@
 
   import {logout} from 'api/login'
 
+  import {mapGetters} from 'vuex'
+
   export default {
     components: {
       AppMain,
@@ -40,6 +42,7 @@
       HeaderNav
     },
     computed: {
+      ...mapGetters(['routes']),
       activeMenu() {
         const route = this.$route
         const { meta, path } = route
@@ -52,7 +55,7 @@
     },
     data() {
       return {
-        routes: this.$router.options.routes,
+        // routes: this.$router.options.routes,
         menuCollapse: false
       }
     },
@@ -96,5 +99,6 @@
   }
   .app-main-wrapper {
     background-color: #f0f2f5;
+    background-color: #fff;
   }
 </style>

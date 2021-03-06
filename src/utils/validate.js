@@ -20,11 +20,15 @@ export function validUsername(str) {
 }
 
 /**
- * 是否为空串, 匹配 '','    '
+ * 是否为空串, 匹配 '','    ',null, undefined
  * @param {*} str 
  */
 export function isBlank(str) {
-  return str === null || str.replace(/^\s*$/, '') === ''
+  return !str || str.replace(/^\s*$/, '') === ''
+}
+
+export function isNotBlank(str) {
+  return !isBlank(str)
 }
 
 /**
@@ -41,7 +45,7 @@ export function validatePhone(str) {
  * @param {*} str 
  */
 export function validateEmail(str) {
-  const regex = /^\w+([-\.]\w+)*@[A-z\d]+(\.[A-z\d]{2,6}){1,2}$/
+  const regex = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
   return regex.test(str)
 }
 
@@ -103,4 +107,21 @@ export function validateLength(prefix = '', min = 0, max = 0) {
     return prefix + `长度应该为${min}位`
   }
   return prefix + `长度应该为${min}-${max}位`
+}
+
+export function validateUnitName(str) {
+  if (isNotBlank(str) && str.length >= 2) {
+    return true
+  }
+  return false
+}
+
+export function validatePostcode(str) {
+  const regex = /^[0-9]{6}$/
+  return regex.test(str)
+}
+
+export function validateURL(str) {
+  const regex = /^(((ht|f)tps?):\/\/)?[\w-]+(\.[\w-]+)+([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?$/
+  return regex.test(str)
 }

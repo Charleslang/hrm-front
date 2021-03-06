@@ -1,7 +1,8 @@
 const getDefaultState = () => {
   return {
     accessToken: localStorage.getItem('accessToken') ? localStorage.getItem('accessToken') : '',
-    currentUser: {}
+    currentUser: {},
+    routes: []
   }
 }
 
@@ -21,6 +22,10 @@ const mutations = {
   },
   resetState(state) {
     Object.assign(state, getDefaultState())
+  },
+  setRoutes(state, routes) {
+    state.routes = routes
+    console.log('设置菜单成功')
   }
 }
 

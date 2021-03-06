@@ -17,7 +17,7 @@ const Dasboard = () => import('views/dashboard/index')
 
 Vue.use(VueRouter)
 
-const routes = [
+const constantRoutes = [
   {
     path: '/404',
     component: () => import('views/404'),
@@ -60,23 +60,32 @@ const routes = [
       {path: 'c2', name: '子元素2', component: () => import('views/C2')}
     ]
   },
-  {
-    path: '*',
-    redirect: '/404',
-    name: '重定向',
-    hidden: true
-  }
+  // {
+  //   path: '*',
+  //   redirect: '/404',
+  //   name: '重定向',
+  //   hidden: true
+  // }
 
 ]
-
-const router = new VueRouter({
-  routes,
-  mode: 'history'
-})
 
 const originalPush = VueRouter.prototype.push
 VueRouter.prototype.push = function push(location) {
   return originalPush.call(this, location).catch(err => err)
+}
+
+const createRouter = () => new VueRouter({
+  mode: 'history', // require service support
+  scrollBehavior: () => ({ y: 0 }),
+  routes: constantRoutes
+})
+
+const router = createRouter()
+
+// Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
+export function resetRouter() {
+  const newRouter = createRouter()
+  router.matcher = newRouter.matcher // reset router
 }
 
 export default router

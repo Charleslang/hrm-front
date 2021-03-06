@@ -1,9 +1,10 @@
-import router from './router'
-import store from './store'
+import router from '@/router'
+import store from '@/store'
 import {Message} from 'element-ui'
 import {messageDuration} from './settings'
 
 const whiteList = ['/', '/index','/purchase','/portal','/portal/login', '/portal/reset', '/portal/register']
+const redirectBack = ['/portal', '/portal/login']
 
 
 router.beforeEach(async(to, from, next) => {
@@ -16,7 +17,7 @@ router.beforeEach(async(to, from, next) => {
   const hasToken = store.getters.token
 
   if (hasToken) {
-    if (['/portal', '/portal/index'].includes(to.path)) {
+    if (redirectBack.includes(to.path)) {
       // if is logged in, redirect to the home page
       next({ path: '/backend' })
       // NProgress.done()
@@ -30,10 +31,11 @@ router.beforeEach(async(to, from, next) => {
         try {
           // get user info
           await store.dispatch('getCurrentUser')
-
-          next()
+          console.log(router)
+          next({...to, replace: true})
         } catch (error) {
           // remove token and go to login page to re-login
+          console.error(error)
           await store.dispatch('resetState')
           // Message({
           //   message: error || '出错了',

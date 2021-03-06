@@ -4,6 +4,9 @@ const getters = {
   },
   currentUser(state) {
     return state.currentUser
+  },
+  routes(state){
+    return state.routes
   }
 }
 

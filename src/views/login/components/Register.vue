@@ -1,7 +1,7 @@
 <template>
   <div id="register">
     <div class="top">
-      <div @click="toLogin()"><i class="el-icon-back"></i></div>
+      <div @click="toLogin"><i class="el-icon-back"></i></div>
       <span>注册</span>
     </div>
     <div class="form-container">

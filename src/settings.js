@@ -13,4 +13,12 @@ export const accessToken = 'accessToken'
  */
 export const headerToken = 'access-token'
 
+// 404
+export const page404 = {
+  path: '*',
+  redirect: '/404',
+  name: '重定向',
+  hidden: true
+}
+
 // 菜单配置

@@ -9,7 +9,8 @@ Vue.use(Vuex)
 
 const state = {
   accessToken: localStorage.getItem('accessToken') ? localStorage.getItem('accessToken') : '',
-  currentUser: {}
+  currentUser: {},
+  routes: []
 }
 
 const store = new Vuex.Store({
