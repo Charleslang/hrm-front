@@ -1,5 +1,56 @@
 <template>
   <div id="unit-wrapper">
+    <div class="query" v-show="queryVisible">
+      {{pageInfo.condition}}
+      <el-form ref="queryForm" :model="pageInfo.condition" label-width="80px" size="mini">
+        <el-form-item label="公司名称">
+          <el-input v-model.trim="pageInfo.condition.name"></el-input>
+        </el-form-item>
+        <el-form-item label="公司简称">
+          <el-input v-model.trim="pageInfo.condition.shortName"></el-input>
+        </el-form-item>
+        <el-form-item label="负责人">
+          <el-input v-model.trim="pageInfo.condition.header"></el-input>
+        </el-form-item>
+        <el-form-item label="创建时间">
+          <el-date-picker
+            v-model="pageInfo.condition.createTime"
+            type="daterange"
+            range-separator="-"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :unlink-panels="true"
+            :editable="false"
+            value-format="timestamp"
+            :picker-options="pickerop">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="更新时间">
+          <el-date-picker
+            v-model="pageInfo.condition.modifyTime"
+            type="daterange"
+            range-separator="-"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :unlink-panels="true"
+            :editable="false"
+            value-format="timestamp">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="pageInfo.condition.status">
+            <el-radio :label="'all'">全部</el-radio>
+            <el-radio :label="'true'">启用</el-radio>
+            <el-radio :label="'false'">停用</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
+        <el-form-item>
+          <el-button type="primary" @click="queryByCondition">查询</el-button>
+          <el-button @click="queryVisible = false">取消</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
     <div>
       <el-button icon="el-icon-plus" type="primary" size="small" @click="addUnit">添加</el-button>
       <el-button
@@ -8,6 +59,7 @@
         @click="deleteUnitBatchByIds(selectRow)">
         批量删除
       </el-button>
+      <el-button icon="el-icon-search" type="primary" size="small" @click="queryVisible = !queryVisible">高级查询</el-button>
     </div>
     <div class="content-wrapper">
       <el-table
@@ -132,7 +184,22 @@
         dialogFormVisible: false,
         unitInfo: {},
         adminInfo: {},
-        loading: false
+        loading: false,
+        queryForm: {
+          name: '',
+          shortName: '',
+          header: '',
+          createTime: '',
+          modifyTime: '',
+          status: 'all'
+        },
+        queryVisible: false,
+        pickerop: {
+          onPick(max, min) {
+            console.log(max , min)
+            console.log(this.queryForm)
+          }
+        }
       }
     },
     computed: {
@@ -140,8 +207,11 @@
         return Object.keys(this.unitInfo).length > 0 ? '编辑单位' : '添加单位'
       }
     },
+    created() {
+      this.pageInfo.condition = Object.assign({}, this.queryForm)
+    },
     mounted() {
-      this.initUnit(this.pageInfo.page, this.pageInfo.size)
+      this.initUnit(this.pageInfo)
     },
     methods: {
       formatUnitHeader(row, column, cellValue, index) {
@@ -155,10 +225,10 @@
         this.unitInfo = {}
         this.adminInfo = {}
       },
-      initUnit(page, size) {
+      initUnit(pageInfo) {
         this.hasChangePage = true
         this.loading = true
-        getAllUnit(page, size).then(res => {
+        getAllUnit(pageInfo).then(res => {
           Object.assign(this.pageInfo, res.data)
           this.hasChangePage = false
           this.loading = false
@@ -188,7 +258,7 @@
           type: 'error'
         }).then(() => {
           deleteUnitById(data.id).then(res => {
-            this.initUnit(this.pageInfo.page, this.pageInfo.size)
+            this.initUnit(this.pageInfo)
             this.$message({
               type: 'success',
               message: '删除成功!'
@@ -207,7 +277,7 @@
         }).then(() => {
           let ids = selectRow.map(e => e.unit.id)
           deleteUnitByIds(ids).then(res => {
-            this.initUnit(this.pageInfo.page, this.pageInfo.size)
+            this.initUnit(this.pageInfo)
             this.$message({
               type: 'success',
               message: '批量删除成功!'
@@ -248,7 +318,7 @@
               let unitBO = new UnitBO(this.$refs.edit.$refs.unitForm.model, this.$refs.edit.$refs.userForm.model)
               updateUnitAndUser(unitBO).then(res => {
                 this.dialogFormVisible = false
-                this.initUnit(this.pageInfo.page, this.pageInfo.size)
+                this.initUnit(this.pageInfo)
                 this.$message({
                   type: 'success',
                   message: '更新成功',
@@ -262,7 +332,7 @@
               let unitBO = new UnitBO(this.$refs.edit.$refs.unitForm.model, this.$refs.edit.$refs.userForm.model)
               addUnitAndUser(unitBO).then(res => {
                 this.dialogFormVisible = false
-                this.initUnit(this.pageInfo.page, this.pageInfo.size)
+                this.initUnit(this.pageInfo)
                 this.$message({
                   type: 'success',
                   message: '添加成功',
@@ -288,7 +358,7 @@
         }).then(() => {
           console.log('hh')
           updateUnitStatus(unit.id, !unit.enable).then(res => {
-            this.initUnit(this.pageInfo.page, this.pageInfo.size)
+            this.initUnit(this.pageInfo)
             this.$message({
               type: 'success',
               message: '已' + msg,
@@ -306,28 +376,42 @@
         console.log(this.selectRow)
       },
       prevPage(page) {
-        this.initUnit(page, this.pageInfo.size)
+        this.pageInfo.page = page
+        console.log(this.pageInfo)
+        this.initUnit(this.pageInfo)
       },
       nextPage(page) {
-        this.initUnit(page, this.pageInfo.size)
+        this.pageInfo.page = page
+        console.log(this.pageInfo)
+        this.initUnit(this.pageInfo)
       },
       changeSize(pageSize) {
+        this.pageInfo.page = 1
         this.pageInfo.size = pageSize
-        this.initUnit(1, pageSize)
+        console.log(this.pageInfo)
+        this.initUnit(this.pageInfo)
       },
       changeCurrent(currPage) {
         if (!this.hasChangePage) {
-          this.initUnit(currPage, this.pageInfo.size)
+          console.log(this.pageInfo)
+          this.pageInfo.page = currPage
+          this.initUnit(this.pageInfo)
         }
       },
       computeIndex(index) {
         return (this.pageInfo.page - 1) * this.pageInfo.size + index + 1
+      },
+      queryByCondition() {
+        this.initUnit(this.pageInfo)
       }
     } 
   }
 </script>
 
 <style scoped>
+  #unit-wrapper {
+    width: 100%;
+  }
  .footer-page {
    background-color: #ffffff;
    display: flex;
@@ -336,5 +420,8 @@
  .form-wrapper {
    height: 56vh;
    width: 100%;
+ }
+ #unit-wrapper .el-input {
+   width: 210px;
  }
 </style>

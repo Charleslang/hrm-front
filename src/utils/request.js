@@ -19,7 +19,7 @@ function closeLoading() {
 function request(config) {
   const axios = Axios.create({
     baseURL: 'http://localhost:8888',
-    timeout: 5000
+    timeout: 10000
   })
 
   // 拦截请求
