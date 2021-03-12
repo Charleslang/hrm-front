@@ -261,7 +261,8 @@
             this.initUnit(this.pageInfo)
             this.$message({
               type: 'success',
-              message: '删除成功!'
+              message: '删除成功!',
+              duration: messageDuration
             })
           }, err => {
             console.log(err)

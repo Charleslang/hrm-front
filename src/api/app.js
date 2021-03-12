@@ -37,3 +37,13 @@ export function addUnitAndUser(unitBO) {
     data: JSON.stringify(unitBO) // 由于后台使用的是 @RequestBody, 所以，这里需要使用 JSON
   })
 }
+
+export function updateRoleAndMenu(roleBO) {
+  return doPut({
+    url: '/business/roleandmenu',
+    headers: {
+      'content-type': 'application/json;charset=UTF-8'
+    },
+    data: JSON.stringify(roleBO)
+  })
+}

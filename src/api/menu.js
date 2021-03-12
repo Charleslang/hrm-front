@@ -53,3 +53,15 @@ export function initRoutes(router, store) {
     }
   })
 }
+
+export function getMenuByRoleId(id) {
+  return doGet({
+    url: '/menu/menu/' + id
+  })
+}
+
+export function getAllMenus() {
+  return doGet({
+    url: '/menu/all'
+  })
+}

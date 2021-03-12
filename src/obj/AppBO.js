@@ -4,3 +4,10 @@ export class UnitBO {
     this.user = user
   }
 }
+
+export class RoleBO {
+  constructor(role = {}, menuIds = []) {
+    this.role = role
+    this.menuIds = menuIds
+  }
+}
