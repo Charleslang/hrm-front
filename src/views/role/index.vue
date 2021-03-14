@@ -1,5 +1,78 @@
 <template>
   <div id="role">
+    <div class="query" v-show="queryVisible">
+      {{pageInfo.condition}}
+      <el-form ref="queryForm" :model="pageInfo.condition" label-width="80px" size="mini">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="角色名称">
+              <el-input v-model.trim="pageInfo.condition.name" style="width: 240px"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="所属单位">
+              <el-input v-model.trim="pageInfo.condition.unitName" style="width: 240px"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="创建时间">
+              <el-date-picker
+                v-model="pageInfo.condition.createTime"
+                type="daterange"
+                range-separator="-"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                :unlink-panels="true"
+                :editable="false"
+                value-format="timestamp">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="更新时间">
+              <el-date-picker
+                v-model="pageInfo.condition.modifyTime"
+                type="daterange"
+                range-separator="-"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                :unlink-panels="true"
+                :editable="false"
+                value-format="timestamp">
+              </el-date-picker>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="类型">
+              <el-radio-group v-model="pageInfo.condition.type">
+                <el-radio :label="'all'">全部</el-radio>
+                <el-radio :label="'true'">系统预置</el-radio>
+                <el-radio :label="'false'">自定义</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="状态">
+              <el-radio-group v-model="pageInfo.condition.status">
+                <el-radio :label="'all'">全部</el-radio>
+                <el-radio :label="'true'">启用</el-radio>
+                <el-radio :label="'false'">停用</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row>
+          <el-form-item>
+            <el-button type="primary" @click="queryByCondition">查询</el-button>
+            <el-button @click="queryVisible = false">取消</el-button>
+          </el-form-item>
+        </el-row>
+      </el-form>
+    </div>
     <div>
       <el-button icon="el-icon-plus" type="primary" size="small" @click="addRole">添加</el-button>
       <el-button
@@ -32,13 +105,9 @@
           :show-overflow-tooltip="true">
         </el-table-column>
         <el-table-column
-          prop="name"
+          prop="permChar"
           label="权限字符"
           :show-overflow-tooltip="true">
-        </el-table-column>
-        <el-table-column
-          prop="type"
-          label="类型">
         </el-table-column>
         <el-table-column
           prop="unitId"
@@ -46,15 +115,24 @@
         </el-table-column>
         <el-table-column
           prop="createTime"
-          label="创建时间">
+          label="创建时间"
+          width="180">
         </el-table-column>
         <el-table-column
           prop="modifyTime"
-          label="更新时间">
+          label="更新时间"
+          width="180">
         </el-table-column>
         <el-table-column
           prop="creator"
           label="创建人">
+        </el-table-column>
+        <el-table-column
+          label="类型">
+          <template slot-scope="scope">
+            <el-tag v-if="scope.row.type === 0" type="danger" size="small">系统预置</el-tag>
+            <el-tag v-else type="warning" size="small">自定义</el-tag>
+          </template>
         </el-table-column>
         <el-table-column label="状态" width="80">
           <template slot-scope="scope">
@@ -65,8 +143,8 @@
               inactive-color="#DCDFE6"
               active-text="启用"
               inactive-text="停用"
-              :disabled="true"
-              @click.native.prevent="changeStatus(scope.row.unit)">
+              
+              @click.native.prevent="changeStatus(scope.row)">
             </el-switch>
           </template>
         </el-table-column>
@@ -103,18 +181,22 @@
       <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" top="8vh" width="30%"
         destroy-on-close>
         <div class="form-wrapper">
-          <el-form label-width="80px" :model="newRoleInfo">
+          <el-form label-width="80px" :model="newRoleInfo" size="small">
             <el-form-item label="角色名称">
               <el-input v-model="newRoleInfo.name"></el-input>
             </el-form-item>
             <el-form-item label="权限字符">
-              <el-input v-model="newRoleInfo.name"></el-input>
+              <el-input v-model="newRoleInfo.permChar"></el-input>
             </el-form-item>
             <el-form-item label="状态">
               <el-radio v-model="newRoleInfo.enable" :label="true">启用</el-radio>
               <el-radio v-model="newRoleInfo.enable" :label="false">停用</el-radio>
             </el-form-item>
             <el-form-item label="菜单权限">
+              <div>
+                <el-checkbox @change="toggleExpandAll">展开/折叠</el-checkbox>
+                <el-checkbox @change="toggleTree">全选/全不选</el-checkbox>
+              </div>
               <el-tree
                 ref="tree"
                 :data="allMenus"
@@ -123,8 +205,7 @@
                 highlight-current
                 node-key="id"
                 :default-checked-keys="checkedKeys"
-                :default-expand-all="expandAll"
-                @check-change="handleTreeCheckChange"
+                :empty-text="'暂无菜单数据'"
                 class="tree-border">
               </el-tree>
             </el-form-item>
@@ -145,9 +226,9 @@
 </template>
 
 <script>
-  import {getAllRoles, deleteRoleBatchByIds, deleteRoleById} from 'api/role'
+  import {getAllRoles, deleteRoleBatchByIds, deleteRoleById, updateRoleStatus} from 'api/role'
   import {getMenuByRoleId, getAllMenus} from 'api/menu'
-  import {updateRoleAndMenu} from 'api/app'
+  import {updateRoleAndMenu, addRoleAndMenu} from 'api/app'
 
   import {Page} from 'obj/Page'
   import {RoleBO} from 'obj/AppBO'
@@ -177,8 +258,6 @@
           children: 'children', 
           label: 'name'
         },
-        // 是否展开所有的树形
-        expandAll: false,
         // 所有菜单
         allMenus: [],
         // 用户原先拥有的菜单
@@ -190,8 +269,16 @@
         // 是否显示高级查询
         queryVisible: false,
         // 是否已经改变页码 changeCurrent、prevPage、nextPage 事件冲突
-        pageIsChange: false
+        pageIsChange: false,
+        // 是否展开所有的树形
+        expandAll: false,
+        // 是否全选菜单
+        selectAllTree: false
       }
+    },
+    created() {
+      this.pageInfo.condition.type = 'all'
+      this.pageInfo.condition.status = 'all'
     },
     mounted() {
       this.getAllRoles()
@@ -207,13 +294,28 @@
         }, err => {
           this.loading = false
           this.pageIsChange = false
-          console.err(err)
+          console.error(err)
         })
       },
       changeSelection(row) {
         this.selectRow = row
       },
-      changeStatus() {},
+      changeStatus(data) {
+        let text = data.enable ? '启用' : '停用'
+        this.$confirm('确认要 [' + text + '] ' + data.name + ' 吗?', "警告", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        }).then(() => {
+          return updateRoleStatus(data.id, data.enable)
+        }).then(() => {
+          this.msgSuccess(text + "成功")
+          this.getAllRoles(this.pageInfo)
+        }).catch((err) => {
+          console.error(err)
+          data.enable = !data.enable
+        })
+      },
       changeSize(size) {
         this.pageInfo.page = 1
         this.pageInfo.size = size
@@ -255,6 +357,7 @@
         return result
       },
       editRole(index, data) {
+        this.dialogTitle = '修改角色'
         Promise.all([
           new Promise((resolve,reject) => {
             getMenuByRoleId(data.id).then(res => {
@@ -285,7 +388,17 @@
         })
       },
       addRole() {
+        this.dialogTitle = '添加角色'
         this.dialogVisible = true
+        // 清理缓存，防止点击编辑之后再点击添加按钮出现数据污染
+        this.newRoleInfo = {enable: true}
+        this.allMenus = []
+        this.checkedKeys = []
+        getAllMenus().then(res => {
+          this.allMenus = res.data
+        }, err => {
+          console.log(err)
+        })
       },
       deleteRole(index, role) {
         if (role.type === 0) {
@@ -349,16 +462,39 @@
           })
         }
       },
-      handleTreeCheckChange() {},
       saveOrUpdate() {
         this.newCheckedKeys = this.$refs.tree.getCheckedNodes(false, true).map(e => e.id)
         let roleBO = new RoleBO(this.newRoleInfo, this.newCheckedKeys)
-        console.log(roleBO)
-        updateRoleAndMenu(roleBO).then(res => {
-          console.log('成功')
-        }, err => {
-          console.error(err)
-        })
+        if (this.dialogTitle === '修改角色') {
+          updateRoleAndMenu(roleBO).then(res => {
+            this.dialogVisible = false
+            this.msgSuccess('修改成功')
+            this.getAllRoles(this.pageInfo)
+          }, err => {
+            console.error(err)
+          })
+        } else if (this.dialogTitle === '添加角色') {
+          addRoleAndMenu(roleBO).then(res => {
+            this.dialogVisible = false
+            this.msgSuccess('添加成功')
+            this.getAllRoles(this.pageInfo)
+          }, err => {
+            console.error(err)
+          })
+        }
+        
+      },
+      toggleExpandAll(checked) {
+        let nodes=this.$refs.tree.store.nodesMap
+        for(let i in nodes){
+            nodes[i].expanded=checked
+        }
+      },
+      toggleTree(checked) {
+        this.$refs.tree.setCheckedNodes(checked ? this.allMenus : [])
+      },
+      queryByCondition() {
+        this.getAllRoles(this.pageInfo)
       }
     }
   }

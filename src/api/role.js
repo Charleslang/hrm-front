@@ -1,7 +1,8 @@
-import {doGet, doPost, doDelete} from 'utils/request'
+import {doGet, doPut, doPost, doDelete} from 'utils/request'
 import qs from 'qs'
 
 export function getAllRoles(pageInfo) {
+  console.log(pageInfo)
   return doPost({
     url: '/role/roles',
     headers: {
@@ -20,5 +21,11 @@ export function deleteRoleBatchByIds(ids = []) {
 export function deleteRoleById(id) {
   return doDelete({
     url: '/role/' + id
+  })
+}
+
+export function updateRoleStatus(id, status) {
+  return doPut({
+    url: '/role/' + id + '/' + status
   })
 }

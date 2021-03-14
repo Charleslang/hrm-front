@@ -47,3 +47,13 @@ export function updateRoleAndMenu(roleBO) {
     data: JSON.stringify(roleBO)
   })
 }
+
+export function addRoleAndMenu(roleBO) {
+  return doPost({
+    url: '/business/rm',
+    headers: {
+      'content-type': 'application/json;charset=UTF-8'
+    },
+    data: JSON.stringify(roleBO)
+  })
+}
